@@ -30,7 +30,7 @@ function Verres() {
   const selectedLens = selectedLensKey
     ? getLensCard(t, selectedLensKey)
     : null;
-  const whatsappAdviceLink = `https://wa.me/213559925559?text=${encodeURIComponent(
+  const whatsappAdviceLink = `https://wa.me/213553924630?text=${encodeURIComponent(
     t("lenses.whatsappMessage")
   )}`;
 

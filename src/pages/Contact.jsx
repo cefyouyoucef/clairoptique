@@ -1,6 +1,6 @@
 import { useLanguage } from "../context/LanguageContext.jsx";
 
-const WHATSAPP_PHONE = "213559925559";
+const WHATSAPP_PHONE = "213553924630";
 
 export default function Contact() {
   const { t } = useLanguage();
@@ -20,7 +20,7 @@ export default function Contact() {
         <div className="contact-panel">
           <div className="contact-item">
             <span>{t("contact.phone")}</span>
-            <strong dir="ltr">0559 92 55 59</strong>
+            <strong dir="ltr">0553924630</strong>
           </div>
 
           <div className="contact-item">

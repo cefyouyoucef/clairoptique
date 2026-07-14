@@ -1,11 +1,16 @@
 node_modules/
 .env
+.env.local
+.env.production
 .env.*
 !.env.example
 .expo/
 mobile/node_modules/
 mobile/.expo/
 dist/
+.vercel/
+vite-dev.log
+vite-dev.err
 *.log
 *.err
 _tmp_*

@@ -12,7 +12,7 @@ const serviceKeys = [
 
 export default function About() {
   const { t } = useLanguage();
-  const whatsappContactLink = `https://wa.me/213559925559?text=${encodeURIComponent(
+  const whatsappContactLink = `https://wa.me/213553924630?text=${encodeURIComponent(
     t("contact.whatsappMessage")
   )}`;
 

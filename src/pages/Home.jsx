@@ -47,7 +47,7 @@ function Home() {
     };
   }, []);
 
-  const whatsappLink = `https://wa.me/213559925559?text=${encodeURIComponent(
+  const whatsappLink = `https://wa.me/213553924630?text=${encodeURIComponent(
     t("home.whatsappMessage")
   )}`;
 

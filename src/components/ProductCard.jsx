@@ -5,7 +5,7 @@ import {
   translate,
 } from "../i18n/translations.js";
 
-const WHATSAPP_NUMBER = "213559925559";
+const WHATSAPP_NUMBER = "213553924630";
 
 function getFullImageUrl(imagePath) {
   if (!imagePath || imagePath.startsWith("data:")) return "";
