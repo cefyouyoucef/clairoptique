@@ -1,0 +1,16 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.expo/
+mobile/node_modules/
+mobile/.expo/
+dist/
+*.log
+*.err
+_tmp_*
+.agents/
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+pnpm-debug.*

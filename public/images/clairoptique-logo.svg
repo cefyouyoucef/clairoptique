@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">ClairOptique logo</title>
+  <rect width="256" height="256" rx="128" fill="#E50914"/>
+  <path d="M44 132c10-35 55-42 78-20 12 11 15 29 8 44-10 22-41 29-63 18-17-9-28-25-23-42Z" fill="none" stroke="#FFFFFF" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M134 112c23-22 68-15 78 20 5 17-6 33-23 42-22 11-53 4-63-18-7-15-4-33 8-44Z" fill="none" stroke="#FFFFFF" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M119 134c7-6 25-6 32 0" fill="none" stroke="#FFFFFF" stroke-width="15" stroke-linecap="round"/>
+  <path d="M43 135c-13-2-22-8-29-17" fill="none" stroke="#FFFFFF" stroke-width="13" stroke-linecap="round"/>
+  <path d="M213 135c13-2 22-8 29-17" fill="none" stroke="#FFFFFF" stroke-width="13" stroke-linecap="round"/>
+</svg>
