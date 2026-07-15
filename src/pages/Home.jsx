@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import ProductCard, {
-  handleProductImageError,
-} from "../components/ProductCard.jsx";
+import ProductCard from "../components/ProductCard.jsx";
 import { useLanguage } from "../context/LanguageContext.jsx";
 import { getProducts } from "../utils/productStorage.js";
 
@@ -78,24 +76,13 @@ function Home() {
             </div>
           </div>
 
-          <div className="hero-visual">
-            <img
-              src="/images/products/lunette-optique-noire.jpg"
-              alt={t("home.heroImageOptical")}
-              className="hero-product hero-product-main"
-              onError={(event) =>
-                handleProductImageError(event, t("home.heroImageOptical"))
-              }
-            />
-            <img
-              src="/images/products/lunette-soleil-femme.jpg"
-              alt={t("home.heroImageSunglasses")}
-              className="hero-product hero-product-small"
-              onError={(event) =>
-                handleProductImageError(event, t("home.heroImageSunglasses"))
-              }
-            />
-          </div>
+        <div className="hero-visual">
+          <img
+            src="/images/hero-sunglasses.png"
+            alt={t("home.heroImageSunglasses")}
+            className="hero-product-image"
+          />
+        </div>
 
           <div className="hero-actions hero-actions-mobile">
             <Link className="btn btn-primary hero-button" to="/products">
