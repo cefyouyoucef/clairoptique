@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
+import { WHATSAPP_NUMBER } from "../config/contact.js";
 import { useLanguage } from "../context/LanguageContext.jsx";
 
-const WHATSAPP_NUMBER = "213553924630";
 const contactLensKeys = ["daily", "monthly", "colored", "toric"];
 const adviceKeys = ["prescription", "duration", "comfort", "hygiene"];
 

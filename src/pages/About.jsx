@@ -1,3 +1,4 @@
+import { WHATSAPP_NUMBER } from "../config/contact.js";
 import { useLanguage } from "../context/LanguageContext.jsx";
 
 const aboutCardKeys = ["advice", "quality", "speed"];
@@ -12,7 +13,7 @@ const serviceKeys = [
 
 export default function About() {
   const { t } = useLanguage();
-  const whatsappContactLink = `https://wa.me/213553924630?text=${encodeURIComponent(
+  const whatsappContactLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
     t("contact.whatsappMessage")
   )}`;
 

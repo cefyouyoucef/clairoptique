@@ -2,6 +2,7 @@
 import { isSupabaseConfigured, supabase } from "../lib/supabaseClient.js";
 
 const PRODUCT_STORAGE_KEY = "clairoptique-products";
+let pendingProductsRequest = null;
 
 function readLocalProducts() {
   try {
@@ -64,6 +65,7 @@ function arrayValue(value) {
 
 function toClientProduct(product) {
   const productName = textValue(product.name);
+  const productNameFr = textValue(product.name_fr || product.nameFr || product.name);
   const productNameAr = textValue(product.name_ar || product.nameAr);
   const productBrand = brandValue(product.brand);
   const productCategory = textValue(product.category);
@@ -72,8 +74,14 @@ function toClientProduct(product) {
   const productColor = textValue(product.color);
   const productFrameSize = textValue(product.frame_size || product.frameSize);
   const productDescription = textValue(product.description);
+  const productDescriptionFr = textValue(
+    product.description_fr || product.descriptionFr || product.description
+  );
   const productDescriptionAr = textValue(
     product.description_ar || product.descriptionAr
+  );
+  const productType = textValue(
+    product.product_type || product.productType || product.type
   );
 
   const productImages = arrayValue(product.images);
@@ -91,6 +99,8 @@ function toClientProduct(product) {
   return {
     id: product.id,
     name: productName,
+    nameFr: productNameFr,
+    name_fr: productNameFr,
     nameAr: productNameAr,
     name_ar: productNameAr,
     brand: productBrand,
@@ -101,8 +111,13 @@ function toClientProduct(product) {
     color: productColor,
     frameSize: productFrameSize,
     description: productDescription,
+    descriptionFr: productDescriptionFr,
+    description_fr: productDescriptionFr,
     descriptionAr: productDescriptionAr,
     description_ar: productDescriptionAr,
+    type: productType,
+    productType,
+    product_type: productType,
     image: primaryProductImage,
     imageUrl: primaryProductImage,
     image_url: primaryProductImage,
@@ -172,7 +187,13 @@ export async function getProducts() {
   }
 
   try {
-    return await fetchProductsFromSupabase();
+    if (!pendingProductsRequest) {
+      pendingProductsRequest = fetchProductsFromSupabase().finally(() => {
+        pendingProductsRequest = null;
+      });
+    }
+
+    return await pendingProductsRequest;
   } catch (error) {
     console.error("Supabase products fallback:", error);
     return readLocalProducts();

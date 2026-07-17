@@ -1,7 +1,9 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import AdminOrders from "./AdminOrders.jsx";
 import ProductForm from "./ProductForm.jsx";
-import { formatPrice, getDiscountInfo } from "../components/ProductCard.jsx";
+import { getDiscountInfo } from "../components/ProductCard.jsx";
+import { formatPrice } from "../utils/productPresentation.js";
 import { isSupabaseConfigured, supabase } from "../lib/supabaseClient.js";
 import {
   addProduct,
@@ -18,14 +20,13 @@ function AdminDashboard() {
   const [mode, setMode] = useState("list");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeSection, setActiveSection] = useState("products");
 
   async function loadProducts() {
     try {
       setProductsStatus("loading");
       setProductsError("");
-
       const nextProducts = await getProducts();
-
       setProducts(nextProducts);
       setProductsStatus("success");
       return nextProducts;
@@ -51,13 +52,17 @@ function AdminDashboard() {
     setMode("edit");
   }
 
+  function handleBackToList() {
+    setMode("list");
+    setSelectedProduct(null);
+    setProductsError("");
+  }
+
   async function handleAdd(product) {
     try {
       setIsSaving(true);
       setProductsError("");
-
       const nextProducts = await addProduct(product);
-
       setProducts(nextProducts);
       setProductsStatus("success");
       setMode("list");
@@ -75,9 +80,7 @@ function AdminDashboard() {
     try {
       setIsSaving(true);
       setProductsError("");
-
       const nextProducts = await updateProduct(selectedProduct.id, product);
-
       setProducts(nextProducts);
       setProductsStatus("success");
       setSelectedProduct(null);
@@ -96,9 +99,7 @@ function AdminDashboard() {
     try {
       setIsSaving(true);
       setProductsError("");
-
       const nextProducts = await deleteProduct(product.id);
-
       setProducts(nextProducts);
       setProductsStatus("success");
     } catch (error) {
@@ -112,12 +113,7 @@ function AdminDashboard() {
   async function handleToggleFeatured(product, featured) {
     try {
       setProductsError("");
-
-      await updateProduct(product.id, {
-        ...product,
-        featured,
-      });
-
+      await updateProduct(product.id, { ...product, featured });
       await loadProducts();
     } catch (error) {
       console.error("Toggle featured failed:", error);
@@ -135,12 +131,6 @@ function AdminDashboard() {
     navigate("/admin-login");
   }
 
-  function handleBackToList() {
-    setMode("list");
-    setSelectedProduct(null);
-    setProductsError("");
-  }
-
   return (
     <section className="section page-section admin-dashboard">
       <div className="container">
@@ -155,152 +145,199 @@ function AdminDashboard() {
           </button>
         </div>
 
-        {productsError ? <p className="admin-error">{productsError}</p> : null}
+        <div className="admin-section-tabs">
+          <button
+            className={activeSection === "products" ? "active" : ""}
+            type="button"
+            onClick={() => setActiveSection("products")}
+          >
+            Produits
+          </button>
 
-        {mode === "list" ? (
-          <>
-            <div className="admin-toolbar">
-              <p>{products.length} produits</p>
-              <button className="btn btn-primary" type="button" onClick={showAddForm}>
-                Ajouter un produit
-              </button>
-            </div>
+          <button
+            className={activeSection === "orders" ? "active" : ""}
+            type="button"
+            onClick={() => setActiveSection("orders")}
+          >
+            Commandes
+          </button>
+        </div>
 
-            {productsStatus === "loading" ? (
-              <div className="empty-state">
-                <p>Chargement des produits...</p>
-              </div>
-            ) : null}
-
-            {productsStatus === "error" ? (
-              <div className="empty-state">
-                <h2>Erreur</h2>
-                <p>Vérifiez la configuration Supabase puis réessayez.</p>
-              </div>
-            ) : null}
-
-            {productsStatus === "success" && products.length === 0 ? (
-              <div className="empty-state">
-                <h2>Aucun produit</h2>
-                <p>Ajoutez votre premier produit.</p>
-              </div>
-            ) : null}
-
-            {productsStatus === "success" && products.length > 0 ? (
-              <div className="admin-products-list">
-                {products.map((product) => {
-                  const { oldPrice, hasDiscount, discountPercent } =
-                    getDiscountInfo(product);
-
-                  return (
-                    <article
-                      className="admin-product-row"
-                      key={product.id}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => showEditForm(product)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          showEditForm(product);
-                        }
-                      }}
-                    >
-                      <img
-                        src={product.image || product.imageUrl || product.image_url || product.images?.[0]}
-                        alt={product.name}
-                      />
-                      <div className="admin-product-info">
-                        <h2>{product.name}</h2>
-                        <p>
-                          {product.brand} / {product.category} / {product.gender}
-                        </p>
-                        {hasDiscount ? (
-                          <div className="admin-discount-summary">
-                            <p className="admin-old-price">{formatPrice(oldPrice)}</p>
-                            <strong>{formatPrice(product.price)}</strong>
-                            <span className="admin-discount-badge">-{discountPercent}%</span>
-                          </div>
-                        ) : (
-                          <strong>{formatPrice(product.price)}</strong>
-                        )}
-                        <p>{product.stock ? "En stock" : "Rupture de stock"}</p>
-                        {product.featured ? (
-                          <span className="admin-featured-badge">Populaire</span>
-                        ) : null}
-                      </div>
-                      <div className="admin-row-actions">
-                        <label
-                          className="admin-featured-toggle"
-                          onClick={(event) => event.stopPropagation()}
-                          onKeyDown={(event) => event.stopPropagation()}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={Boolean(product.featured)}
-                            disabled={isSaving}
-                            onChange={(event) =>
-                              handleToggleFeatured(product, event.target.checked)
-                            }
-                          />
-                          <span>Nos collections populaires</span>
-                        </label>
-                        <button
-                          className="btn btn-secondary"
-                          disabled={isSaving}
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            showEditForm(product);
-                          }}
-                        >
-                          Modifier
-                        </button>
-                        <button
-                          className="btn btn-danger"
-                          disabled={isSaving}
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleDelete(product);
-                          }}
-                        >
-                          Supprimer
-                        </button>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            ) : null}
-          </>
+        {activeSection === "orders" ? (
+          <AdminOrders />
         ) : (
-          <div className="admin-editor">
-            <button
-              className="admin-back-icon-button"
-              type="button"
-              aria-label="Retour aux produits"
-              onClick={handleBackToList}
-            >
-              ←
-            </button>
+          <>
+            {productsError ? <p className="admin-error">{productsError}</p> : null}
 
-            <div className="section-heading">
-              <p className="eyebrow">{mode === "add" ? "Nouveau produit" : "Modifier"}</p>
-              <h2>{mode === "add" ? "Ajouter un produit" : selectedProduct.name}</h2>
-            </div>
+            {mode === "list" ? (
+              <>
+                <div className="admin-toolbar">
+                  <p>{products.length} produits</p>
+                  <button
+                    className="btn btn-primary"
+                    type="button"
+                    onClick={showAddForm}
+                  >
+                    Ajouter un produit
+                  </button>
+                </div>
 
-            <ProductForm
-              initialProduct={selectedProduct}
-              isSubmitting={isSaving}
-              submitLabel={
-                isSaving ? "Enregistrement..." : mode === "add" ? "Ajouter le produit" : "Enregistrer"
-              }
-              onCancel={handleBackToList}
-              onSubmit={mode === "add" ? handleAdd : handleUpdate}
-              showOldPrice={mode === "edit"}
-            />
-          </div>
+                {productsStatus === "loading" ? (
+                  <div className="empty-state">
+                    <p>Chargement des produits...</p>
+                  </div>
+                ) : null}
+
+                {productsStatus === "error" ? (
+                  <div className="empty-state">
+                    <h2>Erreur</h2>
+                    <p>Vérifiez la configuration Supabase puis réessayez.</p>
+                  </div>
+                ) : null}
+
+                {productsStatus === "success" && products.length === 0 ? (
+                  <div className="empty-state">
+                    <h2>Aucun produit</h2>
+                    <p>Ajoutez votre premier produit.</p>
+                  </div>
+                ) : null}
+
+                {productsStatus === "success" && products.length > 0 ? (
+                  <div className="admin-products-list">
+                    {products.map((product) => {
+                      const { oldPrice, hasDiscount, discountPercent } =
+                        getDiscountInfo(product);
+                      const productImage =
+                        product.image ||
+                        product.imageUrl ||
+                        product.image_url ||
+                        product.images?.[0];
+
+                      return (
+                        <article
+                          className="admin-product-row"
+                          key={product.id}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => showEditForm(product)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              showEditForm(product);
+                            }
+                          }}
+                        >
+                          <img src={productImage} alt={product.name} />
+                          <div className="admin-product-info">
+                            <h2>{product.name}</h2>
+                            <p>
+                              {product.brand} / {product.category} / {product.gender}
+                            </p>
+                            {hasDiscount ? (
+                              <div className="admin-discount-summary">
+                                <p className="admin-old-price">
+                                  {formatPrice(oldPrice)}
+                                </p>
+                                <strong>{formatPrice(product.price)}</strong>
+                                <span className="admin-discount-badge">
+                                  -{discountPercent}%
+                                </span>
+                              </div>
+                            ) : (
+                              <strong>{formatPrice(product.price)}</strong>
+                            )}
+                            <p>{product.stock ? "En stock" : "Rupture de stock"}</p>
+                            {product.featured ? (
+                              <span className="admin-featured-badge">Populaire</span>
+                            ) : null}
+                          </div>
+                          <div className="admin-row-actions">
+                            <label
+                              className="admin-featured-toggle"
+                              onClick={(event) => event.stopPropagation()}
+                              onKeyDown={(event) => event.stopPropagation()}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={Boolean(product.featured)}
+                                disabled={isSaving}
+                                onChange={(event) =>
+                                  handleToggleFeatured(
+                                    product,
+                                    event.target.checked
+                                  )
+                                }
+                              />
+                              <span>Nos collections populaires</span>
+                            </label>
+                            <button
+                              className="btn btn-secondary"
+                              disabled={isSaving}
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                showEditForm(product);
+                              }}
+                            >
+                              Modifier
+                            </button>
+                            <button
+                              className="btn btn-danger"
+                              disabled={isSaving}
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleDelete(product);
+                              }}
+                            >
+                              Supprimer
+                            </button>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <div className="admin-editor">
+                <button
+                  className="admin-back-icon-button"
+                  type="button"
+                  aria-label="Retour aux produits"
+                  onClick={handleBackToList}
+                >
+                  ←
+                </button>
+
+                <div className="section-heading">
+                  <p className="eyebrow">
+                    {mode === "add" ? "Nouveau produit" : "Modifier"}
+                  </p>
+                  <h2>
+                    {mode === "add"
+                      ? "Ajouter un produit"
+                      : selectedProduct?.name}
+                  </h2>
+                </div>
+
+                <ProductForm
+                  initialProduct={selectedProduct}
+                  isSubmitting={isSaving}
+                  submitLabel={
+                    isSaving
+                      ? "Enregistrement..."
+                      : mode === "add"
+                        ? "Ajouter le produit"
+                        : "Enregistrer"
+                  }
+                  onCancel={handleBackToList}
+                  onSubmit={mode === "add" ? handleAdd : handleUpdate}
+                  showOldPrice={mode === "edit"}
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>
@@ -308,4 +345,3 @@ function AdminDashboard() {
 }
 
 export default AdminDashboard;
-

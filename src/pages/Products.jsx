@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import ProductCard from "../components/ProductCard.jsx";
 import { useLanguage } from "../context/LanguageContext.jsx";
-import { getProducts } from "../utils/productStorage.js";
+import { useProducts } from "../context/ProductsContext.jsx";
 
 const filters = [
   "Tous",
@@ -29,45 +29,10 @@ function normalizeValue(value) {
 
 function Products() {
   const { t } = useLanguage();
-  const [products, setProducts] = useState([]);
-  const [productsStatus, setProductsStatus] = useState("loading");
-  const [productsError, setProductsError] = useState("");
+  const { products, productsError, productsStatus } = useProducts();
   const [activeFilter, setActiveFilter] = useState("Tous");
   const [currentPage, setCurrentPage] = useState(1);
   const productsSectionRef = useRef(null);
-
-  useEffect(() => {
-    let isActive = true;
-
-    async function refreshProducts() {
-      try {
-        setProductsStatus("loading");
-        setProductsError("");
-
-        const nextProducts = await getProducts();
-
-        if (!isActive) return;
-
-        setProducts(nextProducts);
-        setProductsStatus("success");
-      } catch {
-        if (!isActive) return;
-
-        setProductsError("collections.loadError");
-        setProductsStatus("error");
-      }
-    }
-
-    refreshProducts();
-    window.addEventListener("storage", refreshProducts);
-    window.addEventListener("clairoptique-products-changed", refreshProducts);
-
-    return () => {
-      isActive = false;
-      window.removeEventListener("storage", refreshProducts);
-      window.removeEventListener("clairoptique-products-changed", refreshProducts);
-    };
-  }, []);
 
   const filteredProducts = useMemo(() => {
     const selectedFilter = normalizeValue(activeFilter);

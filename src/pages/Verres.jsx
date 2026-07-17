@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { WHATSAPP_NUMBER } from "../config/contact.js";
 import { useLanguage } from "../context/LanguageContext.jsx";
 
 const lensCardKeys = [
@@ -30,7 +31,7 @@ function Verres() {
   const selectedLens = selectedLensKey
     ? getLensCard(t, selectedLensKey)
     : null;
-  const whatsappAdviceLink = `https://wa.me/213553924630?text=${encodeURIComponent(
+  const whatsappAdviceLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
     t("lenses.whatsappMessage")
   )}`;
 
@@ -68,7 +69,7 @@ function Verres() {
               <h2>{card.title}</h2>
               <p>{card.text}</p>
               <button
-                className="lens-details-link"
+                className="btn btn-secondary lens-details-link"
                 type="button"
                 onClick={() => setSelectedLensKey(card.key)}
               >

@@ -2,16 +2,19 @@
 import { Link, useParams } from "react-router-dom";
 import {
   formatFrameSize,
-  formatPrice,
   getDiscountInfo,
   getProductCategoryLabel,
   getProductImageLabel,
-  getProductImagePath,
   getProductMeta,
   handleProductImageError,
-  handleSharePhoto,
 } from "../components/ProductCard.jsx";
+import {
+  formatPrice,
+  getProductImagePath,
+} from "../utils/productPresentation.js";
+import OrderModal from "../components/OrderModal.jsx";
 import { useLanguage } from "../context/LanguageContext.jsx";
+import useProductWhatsAppShare from "../hooks/useProductWhatsAppShare.js";
 import {
   getLocalizedProductDescription,
   getLocalizedProductName,
@@ -21,18 +24,15 @@ import { getProductById } from "../utils/productStorage.js";
 function getProductGalleryImages(product) {
   if (!product) return [];
 
-  const images = Array.isArray(product.images)
-    ? product.images.filter(Boolean)
-    : [];
-
-  const fallbackImage = getProductImagePath(product);
-
-  const galleryImages =
-    images.length > 0
-      ? images
-      : fallbackImage
-        ? [fallbackImage]
-        : [];
+  const images = Array.isArray(product.images) ? product.images : [];
+  const galleryImages = [
+    ...images,
+    product.imageUrl,
+    product.image,
+    product.image_url,
+  ]
+    .map((image) => String(image || "").trim())
+    .filter(Boolean);
 
   return Array.from(new Set(galleryImages));
 }
@@ -44,6 +44,9 @@ function ProductDetails() {
   const [productStatus, setProductStatus] = useState("loading");
   const [productError, setProductError] = useState("");
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isOrderOpen, setIsOrderOpen] = useState(false);
+  const { handleProductWhatsAppShare, isPreparingShare } =
+    useProductWhatsAppShare(product, language, "order.whatsappMessage");
 
   useEffect(() => {
     let isActive = true;
@@ -51,10 +54,11 @@ function ProductDetails() {
     async function refreshProduct() {
       try {
         setProductStatus("loading");
+        setIsOrderOpen(false);
+        setActiveImageIndex(0);
         const nextProduct = await getProductById(id);
         if (!isActive) return;
         setProduct(nextProduct);
-        setActiveImageIndex(0);
         setProductStatus(nextProduct ? "success" : "empty");
       } catch {
         if (!isActive) return;
@@ -116,16 +120,19 @@ function ProductDetails() {
   const displayedDescription = getLocalizedProductDescription(product, language);
   const productImageLabel = getProductImageLabel(product, language);
   const productImages = getProductGalleryImages(product);
-  const mainImagePath = productImages[activeImageIndex] || getProductImagePath(product);
+  const activeImage =
+    productImages[activeImageIndex] ||
+    productImages[0] ||
+    getProductImagePath(product);
   const { oldPrice, hasDiscount, discountPercent } = getDiscountInfo(product);
 
-  function showPreviousImage() {
+  function handlePreviousImage() {
     setActiveImageIndex((index) =>
       index === 0 ? productImages.length - 1 : index - 1
     );
   }
 
-  function showNextImage() {
+  function handleNextImage() {
     setActiveImageIndex((index) =>
       index === productImages.length - 1 ? 0 : index + 1
     );
@@ -145,64 +152,65 @@ function ProductDetails() {
         </div>
 
         <div className="details-grid">
-          <div className="details-gallery product-detail-gallery">
-            <div className="details-image-wrap product-detail-image-wrap">
+          <div className="product-detail-gallery">
+            <div className="product-detail-main-image">
               <img
                 src="/images/logo.png"
                 alt="Clair'Optique"
                 className="product-logo-badge"
               />
               <img
-                src={mainImagePath}
+                src={activeImage}
                 alt={productImageLabel}
-                className="details-image"
-                data-image-path={mainImagePath}
-                onError={(event) => handleProductImageError(event, productImageLabel)}
+                className="product-detail-image"
+                data-image-path={activeImage}
+                onError={(event) =>
+                  handleProductImageError(event, productImageLabel)
+                }
               />
 
               {productImages.length > 1 ? (
                 <>
                   <button
-                    className="product-gallery-arrow left"
                     type="button"
-                    aria-label={t("product.previousPhoto")}
-                    onClick={showPreviousImage}
+                    className="product-gallery-arrow product-gallery-arrow-prev"
+                    aria-label={t("product.previousImage")}
+                    onClick={handlePreviousImage}
                   >
-                    {t("common.previousArrow")}
+                    ‹
                   </button>
                   <button
-                    className="product-gallery-arrow right"
                     type="button"
-                    aria-label={t("product.nextPhoto")}
-                    onClick={showNextImage}
+                    className="product-gallery-arrow product-gallery-arrow-next"
+                    aria-label={t("product.nextImage")}
+                    onClick={handleNextImage}
                   >
-                    {t("common.nextArrow")}
+                    ›
                   </button>
+                  <span className="product-gallery-counter">
+                    {activeImageIndex + 1} / {productImages.length}
+                  </span>
                 </>
               ) : null}
             </div>
 
             {productImages.length > 1 ? (
               <div
-                className="details-thumbnails product-detail-thumbnails"
-                aria-label={t("product.photos")}
+                className="product-gallery-thumbnails"
+                aria-label={t("product.images")}
               >
                 {productImages.map((imagePath, index) => (
                   <button
-                    key={imagePath}
-                    className={`details-thumbnail product-detail-thumbnail ${
-                      index === activeImageIndex ? "is-active" : ""
-                    }`}
                     type="button"
+                    className={`product-gallery-thumbnail ${
+                      index === activeImageIndex ? "active" : ""
+                    }`}
+                    key={`${imagePath}-${index}`}
+                    aria-label={t("product.viewImage", { number: index + 1 })}
+                    aria-pressed={index === activeImageIndex}
                     onClick={() => setActiveImageIndex(index)}
-                    aria-label={t("product.viewPhoto", { number: index + 1 })}
                   >
-                    <img
-                      src={imagePath}
-                      alt={`${productImageLabel} ${index + 1}`}
-                      data-image-path={imagePath}
-                      onError={(event) => handleProductImageError(event, productImageLabel)}
-                    />
+                    <img src={imagePath} alt="" />
                   </button>
                 ))}
               </div>
@@ -263,14 +271,35 @@ function ProductDetails() {
               <button
                 className="btn btn-primary"
                 type="button"
-                onClick={() => handleSharePhoto(product, language)}
+                disabled={!product.stock}
+                onClick={() => setIsOrderOpen(true)}
               >
-                {t("product.orderNowWhatsApp")}
+                {product.stock ? t("order.buyNow") : t("product.outOfStock")}
+              </button>
+              <button
+                className="btn btn-secondary"
+                type="button"
+                disabled={isPreparingShare}
+                aria-busy={isPreparingShare}
+                onClick={async (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  await handleProductWhatsAppShare();
+                }}
+              >
+                {isPreparingShare
+                  ? t("whatsapp.preparing")
+                  : t("order.whatsappSecondary")}
               </button>
             </div>
           </div>
         </div>
       </div>
+      <OrderModal
+        isOpen={isOrderOpen}
+        product={product}
+        onClose={() => setIsOrderOpen(false)}
+      />
     </section>
   );
 }

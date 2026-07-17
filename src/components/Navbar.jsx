@@ -1,15 +1,62 @@
-import { useEffect, useRef, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import {
+  getProductCategoryLabel,
+  getProductPlaceholder,
+  handleProductImageError,
+} from "./ProductCard.jsx";
+import {
+  formatPrice,
+  getProductImagePath,
+} from "../utils/productPresentation.js";
 import { useLanguage } from "../context/LanguageContext.jsx";
-import { translate } from "../i18n/translations.js";
+import { useProducts } from "../context/ProductsContext.jsx";
+import {
+  getLocalizedProductName,
+  translate,
+} from "../i18n/translations.js";
+import {
+  normalizeSearchText,
+  productMatchesSearch,
+} from "../utils/productSearch.js";
+
+function getSearchGenderLabel(gender, language) {
+  const genderKeys = {
+    Homme: "product.gender.men",
+    Femme: "product.gender.women",
+    Enfant: "product.gender.children",
+    Tous: "product.gender.all",
+  };
+
+  return genderKeys[gender]
+    ? translate(language, genderKeys[gender])
+    : String(gender || "");
+}
+
+function getSearchColorAliases(color) {
+  const colorAliases = {
+    noir: ["أسود"],
+    marron: ["بني"],
+    bleu: ["أزرق"],
+    "argenté": ["فضي"],
+    "or rose": ["ذهبي وردي"],
+    transparent: ["شفاف"],
+  };
+
+  return colorAliases[normalizeSearchText(color)] || [];
+}
 
 function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { language, t, toggleLanguage } = useLanguage();
+  const { products, productsError, productsStatus } = useProducts();
   const inputRef = useRef(null);
+  const searchButtonRef = useRef(null);
+  const searchPanelRef = useRef(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const isAdminRoute = location.pathname.startsWith("/admin");
   const label = isAdminRoute ? (key) => translate("fr", key) : t;
   const languageButtonText =
@@ -18,6 +65,23 @@ function Navbar() {
     language === "fr"
       ? t("language.switchToArabic")
       : t("language.switchToFrench");
+  const normalizedSearchQuery = normalizeSearchText(searchQuery);
+  const searchResults = useMemo(() => {
+    if (!normalizedSearchQuery) return [];
+
+    return products.filter((product) =>
+      productMatchesSearch(product, normalizedSearchQuery, [
+        getLocalizedProductName(product, language),
+        getLocalizedProductName(product, "fr"),
+        getLocalizedProductName(product, "ar"),
+        getProductCategoryLabel(product.category, "fr"),
+        getProductCategoryLabel(product.category, "ar"),
+        getSearchGenderLabel(product.gender, "fr"),
+        getSearchGenderLabel(product.gender, "ar"),
+        ...getSearchColorAliases(product.color),
+      ])
+    );
+  }, [language, normalizedSearchQuery, products]);
 
   useEffect(() => {
     if (isSearchOpen) {
@@ -27,11 +91,40 @@ function Navbar() {
 
   useEffect(() => {
     setIsMenuOpen(false);
+    setIsSearchOpen(false);
+    setSearchQuery("");
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isSearchOpen) return undefined;
+
+    function handlePointerDown(event) {
+      const clickedInsidePanel = searchPanelRef.current?.contains(event.target);
+      const clickedSearchButton = searchButtonRef.current?.contains(event.target);
+
+      if (!clickedInsidePanel && !clickedSearchButton) {
+        closeSearch();
+      }
+    }
+
+    function handleEscape(event) {
+      if (event.key === "Escape") {
+        closeSearch();
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isSearchOpen]);
 
   function closeSearch() {
     setIsSearchOpen(false);
-    setSearchTerm("");
+    setSearchQuery("");
   }
 
   function toggleSearch() {
@@ -42,6 +135,15 @@ function Navbar() {
   function toggleMenu() {
     setIsMenuOpen((isOpen) => !isOpen);
     closeSearch();
+  }
+
+  function closeMenu() {
+    setIsMenuOpen(false);
+  }
+
+  function handleSearchResultClick(product) {
+    closeSearch();
+    navigate(`/products/${product.id}`);
   }
 
   return (
@@ -64,6 +166,7 @@ function Navbar() {
             </button>
           ) : null}
           <button
+            ref={searchButtonRef}
             className={isSearchOpen ? "search-button active" : "search-button"}
             type="button"
             aria-expanded={isSearchOpen}
@@ -111,6 +214,7 @@ function Navbar() {
       />
 
       <section
+        ref={searchPanelRef}
         className={
           isSearchOpen
             ? "search-panel mobile-search-overlay is-open open"
@@ -122,18 +226,31 @@ function Navbar() {
       >
         <div className="search-panel-inner mobile-search-card">
           <div className="mobile-search-row">
-            <input
-              ref={inputRef}
-              id="site-search-input"
-              type="search"
-              placeholder={label("nav.searchPlaceholder")}
-              value={searchTerm}
-              tabIndex={isSearchOpen ? 0 : -1}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Escape") closeSearch();
-              }}
-            />
+            <div className="search-input-wrap">
+              <input
+                ref={inputRef}
+                id="site-search-input"
+                type="search"
+                placeholder={label("nav.searchPlaceholder")}
+                value={searchQuery}
+                tabIndex={isSearchOpen ? 0 : -1}
+                onChange={(event) => setSearchQuery(event.target.value)}
+              />
+              {searchQuery ? (
+                <button
+                  className="search-clear-button"
+                  type="button"
+                  aria-label={label("nav.clearSearch")}
+                  tabIndex={isSearchOpen ? 0 : -1}
+                  onClick={() => {
+                    setSearchQuery("");
+                    inputRef.current?.focus();
+                  }}
+                >
+                  {"\u00d7"}
+                </button>
+              ) : null}
+            </div>
             <button
               className="search-close-button mobile-search-close"
               type="button"
@@ -144,9 +261,80 @@ function Navbar() {
               {"\u00d7"}
             </button>
           </div>
-          <p className="mobile-search-help">{label("nav.searchHelp")}</p>
+          {normalizedSearchQuery ? (
+            <div
+              className="search-results-panel"
+              role="region"
+              aria-live="polite"
+              aria-label={label("nav.searchResults")}
+            >
+              {productsStatus === "loading" ? (
+                <p className="search-results-state">
+                  {label("collections.loading")}
+                </p>
+              ) : null}
+
+              {productsStatus === "error" ? (
+                <p className="search-results-state">
+                  {label(productsError || "collections.loadError")}
+                </p>
+              ) : null}
+
+              {productsStatus === "success" && searchResults.length === 0 ? (
+                <p className="search-results-state">
+                  {label("nav.noSearchResults")}
+                </p>
+              ) : null}
+
+              {productsStatus === "success"
+                ? searchResults.map((product) => {
+                    const productName = getLocalizedProductName(product, language);
+                    const imagePath = getProductImagePath(product);
+                    const productMeta =
+                      product.brand ||
+                      getProductCategoryLabel(product.category, language);
+
+                    return (
+                      <button
+                        className="search-result-item"
+                        type="button"
+                        key={product.id}
+                        onClick={() => handleSearchResultClick(product)}
+                      >
+                        <img
+                          className="search-result-image"
+                          src={imagePath || getProductPlaceholder(productName)}
+                          alt=""
+                          data-image-path={imagePath}
+                          onError={(event) =>
+                            handleProductImageError(event, productName)
+                          }
+                        />
+                        <span className="search-result-copy">
+                          <strong>{productName}</strong>
+                          <span>{productMeta}</span>
+                        </span>
+                        <strong className="search-result-price">
+                          {formatPrice(product.price)}
+                        </strong>
+                      </button>
+                    );
+                  })
+                : null}
+            </div>
+          ) : (
+            <p className="mobile-search-help">{label("nav.searchHelp")}</p>
+          )}
         </div>
       </section>
+
+      {isMenuOpen ? (
+        <div
+          className="mobile-menu-backdrop"
+          onClick={closeMenu}
+          role="presentation"
+        />
+      ) : null}
 
       <nav
         className={isMenuOpen ? "mobile-menu open" : "mobile-menu"}
@@ -161,39 +349,67 @@ function Navbar() {
             type="button"
             aria-label={label("nav.closeMenu")}
             tabIndex={isMenuOpen ? 0 : -1}
-            onClick={() => setIsMenuOpen(false)}
+            onClick={closeMenu}
           >
             {"\u00d7"}
           </button>
         </div>
         {!isAdminRoute ? (
           <button
-            className="language-switcher language-switcher-mobile"
+            className="language-switcher-mobile"
             type="button"
-            aria-label={languageButtonLabel}
             tabIndex={isMenuOpen ? 0 : -1}
             onClick={toggleLanguage}
           >
-            {languageButtonText}
+            <span className="language-switcher-icon" aria-hidden="true">
+              🌐
+            </span>
+
+            <span>{languageButtonText}</span>
           </button>
         ) : null}
         <div className="mobile-menu-links">
-          <NavLink to="/" end tabIndex={isMenuOpen ? 0 : -1}>
+          <NavLink
+            to="/"
+            end
+            tabIndex={isMenuOpen ? 0 : -1}
+            onClick={closeMenu}
+          >
             {label("nav.home")}
           </NavLink>
-          <NavLink to="/products" tabIndex={isMenuOpen ? 0 : -1}>
+          <NavLink
+            to="/products"
+            tabIndex={isMenuOpen ? 0 : -1}
+            onClick={closeMenu}
+          >
             {label("nav.collections")}
           </NavLink>
-          <NavLink to="/verres" tabIndex={isMenuOpen ? 0 : -1}>
+          <NavLink
+            to="/verres"
+            tabIndex={isMenuOpen ? 0 : -1}
+            onClick={closeMenu}
+          >
             {label("nav.lenses")}
           </NavLink>
-          <NavLink to="/lentilles" tabIndex={isMenuOpen ? 0 : -1}>
+          <NavLink
+            to="/lentilles"
+            tabIndex={isMenuOpen ? 0 : -1}
+            onClick={closeMenu}
+          >
             {label("nav.contactLenses")}
           </NavLink>
-          <NavLink to="/about" tabIndex={isMenuOpen ? 0 : -1}>
+          <NavLink
+            to="/about"
+            tabIndex={isMenuOpen ? 0 : -1}
+            onClick={closeMenu}
+          >
             {label("nav.about")}
           </NavLink>
-          <NavLink to="/contact" tabIndex={isMenuOpen ? 0 : -1}>
+          <NavLink
+            to="/contact"
+            tabIndex={isMenuOpen ? 0 : -1}
+            onClick={closeMenu}
+          >
             {label("nav.contact")}
           </NavLink>
         </div>
