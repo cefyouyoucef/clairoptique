@@ -3745,6 +3745,147 @@ body.order-dialog-open {
   box-shadow: 0 4px 14px rgba(17, 24, 39, 0.08);
 }
 
+/* Admin orders */
+.admin-orders-view {
+  min-width: 0;
+}
+
+.admin-order-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+  overflow-x: auto;
+}
+
+.admin-order-tabs button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 50px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #4b5563;
+  padding: 8px 10px 8px 14px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.admin-order-tabs button:hover,
+.admin-order-tabs button:focus-visible {
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.admin-order-tabs button.active {
+  border-color: #e50914;
+  background: #fff5f5;
+  color: #e50914;
+  box-shadow: 0 8px 20px rgba(229, 9, 20, 0.1);
+}
+
+.admin-order-tabs strong {
+  display: inline-grid;
+  min-width: 28px;
+  min-height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #111827;
+  font-size: 12px;
+}
+
+.admin-order-tabs button.active strong {
+  background: #e50914;
+  color: #ffffff;
+}
+
+.admin-order-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.admin-notification-button {
+  min-height: 42px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #111827;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.admin-notification-button:hover,
+.admin-notification-button:focus-visible {
+  border-color: #e50914;
+  color: #e50914;
+}
+
+.admin-notification-button.enabled {
+  border-color: #15803d;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.admin-order-toast-container {
+  position: fixed;
+  z-index: 1200;
+  top: 88px;
+  right: 20px;
+  width: min(360px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.admin-order-toast {
+  display: grid;
+  gap: 5px;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #e50914;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 14px 16px;
+  color: #111827;
+  box-shadow: 0 16px 40px rgba(17, 24, 39, 0.18);
+  animation: admin-order-toast-in 0.2s ease-out;
+}
+
+.admin-order-toast strong {
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+.admin-order-toast span {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+@keyframes admin-order-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .admin-orders-list {
   display: grid;
   gap: 18px;
@@ -3860,15 +4001,18 @@ body.order-dialog-open {
 }
 
 .admin-order-status-control {
-  display: grid;
-  grid-template-columns: auto minmax(180px, 260px);
+  display: flex;
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: end;
+  justify-content: flex-end;
   gap: 12px;
   font-weight: 900;
 }
 
-.admin-order-status-control select {
+.admin-order-status-select {
+  width: 260px;
+  max-width: 100%;
+  flex: 0 1 260px;
   min-height: 44px;
   border: 1px solid #d1d5db;
   border-radius: 12px;
@@ -3881,17 +4025,40 @@ html[dir="rtl"] .order-modal,
 html[dir="rtl"] .order-form-grid input,
 html[dir="rtl"] .order-form-grid select,
 html[dir="rtl"] .order-form-grid textarea {
+  direction: rtl;
   text-align: right;
 }
 
 @media (max-width: 640px) {
-  .admin-order-heading,
+  .admin-order-tabs {
+    grid-template-columns: repeat(5, minmax(150px, 1fr));
+    margin-inline: -2px;
+  }
+
   .admin-order-status-control {
     align-items: stretch;
-    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .admin-order-status-select {
+    width: 100%;
+    flex-basis: 100%;
+  }
+
+  .admin-order-toolbar-actions,
+  .admin-order-toolbar-actions > button {
+    width: 100%;
+  }
+
+  .admin-order-toast-container {
+    top: 76px;
+    right: 16px;
+    left: 16px;
+    width: auto;
   }
 
   .admin-order-heading {
+    align-items: stretch;
     flex-direction: column;
   }
 
