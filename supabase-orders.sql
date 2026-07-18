@@ -120,6 +120,20 @@ create policy "Public can create orders"
     and total_price >= 0
   );
 
+drop policy if exists "Authenticated can create orders" on public.orders;
+
+create policy "Authenticated can create orders"
+  on public.orders
+  for insert
+  to authenticated
+  with check (
+    status = 'nouvelle'
+    and char_length(trim(customer_name)) >= 2
+    and char_length(trim(phone)) between 8 and 30
+    and quantity between 1 and 99
+    and total_price >= 0
+  );
+
 drop policy if exists "Admin can read orders" on public.orders;
 create policy "Admin can read orders"
   on public.orders
