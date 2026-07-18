@@ -154,6 +154,6 @@ revoke all privileges on table public.orders from anon;
 revoke all privileges on table public.orders from authenticated;
 
 grant insert on table public.orders to anon;
-grant select, update on table public.orders to authenticated;
+grant insert, select, update on table public.orders to authenticated;
 
 notify pgrst, 'reload schema';
