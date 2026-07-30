@@ -14,7 +14,6 @@ const emptyProduct = {
   frameSize: "",
   description: "",
   imageUrl: "",
-  stock: true,
 };
 
 function getSafeFileName(fileName) {
@@ -212,6 +211,21 @@ export default function ProductForm({
     event.preventDefault();
     setUploadError("");
 
+    const formData = new FormData(event.currentTarget);
+    const stockInput = String(formData.get("stock") ?? "").trim();
+    const stockValue = Number.parseInt(stockInput, 10);
+
+    if (
+      !/^\d+$/.test(stockInput) ||
+      !Number.isInteger(stockValue) ||
+      stockValue < 0
+    ) {
+      setUploadError(
+        "La quantité en stock doit être un nombre entier supérieur ou égal à 0."
+      );
+      return;
+    }
+
     const pendingUrl = imageUrlInput.trim();
     const submitImageItems =
       pendingUrl && !imageItems.some((item) => item.key === `url-${pendingUrl}`)
@@ -223,7 +237,6 @@ export default function ProductForm({
       return;
     }
 
-    const formData = new FormData(event.currentTarget);
     let imageUrls = [];
 
     try {
@@ -265,7 +278,7 @@ export default function ProductForm({
       image: imageUrl,
       imageUrl,
       images: imageUrls,
-      stock: formData.get("stock") === "on",
+      stock: stockValue,
       ...(initialProduct && "featured" in initialProduct
         ? { featured: initialProduct.featured ?? false }
         : {}),
@@ -338,6 +351,19 @@ export default function ProductForm({
             min="0"
             required
             defaultValue={currentProduct.price}
+            disabled={isFormBusy}
+          />
+        </label>
+
+        <label>
+          <span>Quantité en stock</span>
+          <input
+            name="stock"
+            type="number"
+            min="0"
+            step="1"
+            required
+            defaultValue={initialProduct?.stock ?? 0}
             disabled={isFormBusy}
           />
         </label>
@@ -441,15 +467,6 @@ export default function ProductForm({
           ) : null}
         </div>
 
-        <label className="admin-checkbox">
-          <input
-            name="stock"
-            type="checkbox"
-            defaultChecked={currentProduct.stock ?? true}
-            disabled={isFormBusy}
-          />
-          <span>En stock</span>
-        </label>
       </div>
 
       <div className="admin-image-preview-section">
