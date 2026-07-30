@@ -70,7 +70,7 @@ function createInitialImageItems(product) {
 
 async function uploadProductImage(file, index = 0) {
   if (!isSupabaseConfigured || !supabase) {
-    throw new Error("Supabase n'est pas configur\u00e9.");
+    throw new Error("Supabase n'est pas configuré.");
   }
 
   const safeFileName = getSafeFileName(file.name) || "product-image.jpg";
@@ -95,7 +95,7 @@ async function uploadProductImage(file, index = 0) {
 
   if (!publicUrl) {
     throw new Error(
-      "Impossible de r\u00e9cup\u00e9rer l'URL publique de l'image."
+      "Impossible de récupérer l'URL publique de l'image."
     );
   }
 
@@ -253,7 +253,7 @@ export default function ProductForm({
       );
     } catch (error) {
       console.error("Product image upload error:", error);
-      setUploadError(error.message || "Impossible de t\u00e9l\u00e9verser l'image.");
+      setUploadError(error.message || "Impossible de téléverser l'image.");
       return;
     } finally {
       setIsUploading(false);
@@ -314,7 +314,7 @@ export default function ProductForm({
         </label>
 
         <label>
-          <span>{"Cat\u00e9gorie"}</span>
+          <span>Catégorie</span>
           <select
             name="category"
             required
@@ -420,13 +420,13 @@ export default function ProductForm({
             <span className="admin-upload-button">Choisir une image</span>
             <span className="admin-upload-name">
               {imageItems.length > 0
-                ? `${imageItems.length} image${imageItems.length > 1 ? "s" : ""} s\u00e9lectionn\u00e9e${imageItems.length > 1 ? "s" : ""}`
-                : "Aucune image s\u00e9lectionn\u00e9e"}
+                ? `${imageItems.length} image${imageItems.length > 1 ? "s" : ""} sélectionnée${imageItems.length > 1 ? "s" : ""}`
+                : "Aucune image sélectionnée"}
             </span>
           </span>
 
           <small>
-            Choisissez une image depuis votre PC. Vous pouvez aussi utiliser une URL si n\u00e9cessaire.
+            Choisissez une image depuis votre PC. Vous pouvez aussi utiliser une URL si nécessaire.
           </small>
         </label>
 
@@ -474,7 +474,7 @@ export default function ProductForm({
           <div className="admin-image-preview-grid">
             {imageItems.map((item) => (
               <div className="admin-image-preview" key={item.id}>
-                <img src={item.previewUrl} alt="Aper\u00e7u du produit" />
+                <img src={item.previewUrl} alt="Aperçu du produit" />
 
                 <button
                   className="admin-image-remove-button"
@@ -483,14 +483,12 @@ export default function ProductForm({
                   disabled={isFormBusy}
                   onClick={() => handleRemoveImage(item.id)}
                 >
-                  {"\u00d7"}
+                  ×
                 </button>
               </div>
             ))}
           </div>
-        ) : (
-          <p className="admin-upload-empty">{"Aucune image s\u00e9lectionn\u00e9e"}</p>
-        )}
+        ) : null}
       </div>
 
       <label>
@@ -505,14 +503,14 @@ export default function ProductForm({
       </label>
 
       {isUploading ? (
-        <p className="admin-info">{"T\u00e9l\u00e9chargement de l'image..."}</p>
+        <p className="admin-info">Téléchargement de l'image...</p>
       ) : null}
 
       {uploadError ? <p className="admin-error">{uploadError}</p> : null}
 
       <div className="admin-form-actions">
         <button className="btn btn-primary" type="submit" disabled={isFormBusy}>
-          {isUploading ? "T\u00e9l\u00e9chargement..." : submitLabel}
+          {isUploading ? "Téléchargement..." : submitLabel}
         </button>
 
         {onCancel ? (
