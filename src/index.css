@@ -1705,10 +1705,6 @@ main {
   overflow-wrap: normal;
 }
 
-.order-text-mobile {
-  display: none;
-}
-
 @container (min-width: 440px) {
   .card-actions .btn {
     width: auto;
@@ -3135,15 +3131,6 @@ main {
     text-align: center;
   }
 
-  .order-text-desktop {
-    display: none;
-    width: 100%;
-    text-align: center;
-  }
-
-  .order-text-mobile {
-    display: inline;
-  }
 }
 
 @media (max-width: 640px) {

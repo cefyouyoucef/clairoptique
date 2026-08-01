@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import OrderModal from "./OrderModal.jsx";
 import { useLanguage } from "../context/LanguageContext.jsx";
-import useProductWhatsAppShare from "../hooks/useProductWhatsAppShare.js";
 import {
   getLocalizedProductName,
   translate,
@@ -256,8 +255,6 @@ function ProductCard({ product }) {
   );
   const collageUrl = useProductCollage(collageImages);
   const { oldPrice, hasDiscount, discountPercent } = getDiscountInfo(product);
-  const { handleProductWhatsAppShare, isPreparingShare } =
-    useProductWhatsAppShare(product, language);
 
   function openDetails() {
     navigate(detailsPath);
@@ -343,29 +340,6 @@ function ProductCard({ product }) {
               }}
             >
               {t("order.buyNow")}
-            </button>
-            <button
-              className="btn btn-secondary"
-              type="button"
-              disabled={!product.stock || isPreparingShare}
-              aria-busy={isPreparingShare}
-              onClick={async (event) => {
-                event.stopPropagation();
-                await handleProductWhatsAppShare();
-              }}
-            >
-              {isPreparingShare ? (
-                t("whatsapp.preparing")
-              ) : (
-                <>
-                  <span className="order-text-desktop">
-                    {t("product.orderWhatsApp")}
-                  </span>
-                  <span className="order-text-mobile">
-                    {t("product.order")}
-                  </span>
-                </>
-              )}
             </button>
           </div>
         </div>
