@@ -149,12 +149,22 @@ create policy "Admin can update orders"
   using ((auth.jwt() ->> 'email') = 'admin@clairoptique.com')
   with check ((auth.jwt() ->> 'email') = 'admin@clairoptique.com');
 
+drop policy if exists "Admin can delete cancelled orders" on public.orders;
+create policy "Admin can delete cancelled orders"
+  on public.orders
+  for delete
+  to authenticated
+  using (
+    (auth.jwt() ->> 'email') = 'admin@clairoptique.com'
+    and lower(trim(status)) in ('annulee', 'annulée', 'cancelled', 'canceled')
+  );
+
 revoke all privileges on table public.orders from public;
 revoke all privileges on table public.orders from anon;
 revoke all privileges on table public.orders from authenticated;
 
 grant insert on table public.orders to anon;
-grant insert, select, update on table public.orders to authenticated;
+grant insert, select, update, delete on table public.orders to authenticated;
 
 do $$
 begin

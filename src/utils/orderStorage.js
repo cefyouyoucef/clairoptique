@@ -139,6 +139,24 @@ export async function getOrders() {
   return data || [];
 }
 
+export async function deleteOrder(id) {
+  requireSupabase();
+
+  const { data, error } = await supabase
+    .from("orders")
+    .delete()
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data?.id) {
+    throw new Error("Order was not deleted.");
+  }
+
+  return id;
+}
+
 export async function updateOrderStatus(id, status) {
   requireSupabase();
 

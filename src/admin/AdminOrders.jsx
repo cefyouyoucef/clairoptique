@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { isSupabaseConfigured, supabase } from "../lib/supabaseClient.js";
 import { formatPrice } from "../utils/productPresentation.js";
 import {
+  deleteOrder,
   getOrders,
   ORDER_STATUSES,
   updateOrderStatus,
@@ -39,6 +40,16 @@ function getTabStatus(status) {
   return status === "confirmee" ? "en_preparation" : status;
 }
 
+function isCancelledStatus(status) {
+  const normalizedStatus = String(status || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+  return ["annulee", "cancelled", "canceled"].includes(normalizedStatus);
+}
+
 function getAvailableStatuses(status) {
   const allowedStatuses = STATUS_TRANSITIONS[status] || [status, "annulee"];
   return ORDER_STATUSES.filter((value) => allowedStatuses.includes(value));
@@ -58,7 +69,9 @@ function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [ordersStatus, setOrdersStatus] = useState("loading");
   const [ordersError, setOrdersError] = useState("");
+  const [ordersMessage, setOrdersMessage] = useState("");
   const [updatingOrderId, setUpdatingOrderId] = useState("");
+  const [deletingOrderId, setDeletingOrderId] = useState("");
   const [activeStatus, setActiveStatus] = useState("nouvelle");
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [newOrderToast, setNewOrderToast] = useState(null);
@@ -298,6 +311,42 @@ function AdminOrders() {
     }
   }
 
+  async function handleDeleteOrder(order) {
+    if (
+      deletingOrderId ||
+      updatingOrderId ||
+      !isCancelledStatus(order.status)
+    ) {
+      return;
+    }
+
+    const shouldDelete = window.confirm(
+      "Voulez-vous vraiment supprimer définitivement cette commande annulée ?"
+    );
+
+    if (!shouldDelete) return;
+
+    setDeletingOrderId(order.id);
+    setOrdersError("");
+    setOrdersMessage("");
+
+    try {
+      await deleteOrder(order.id);
+      setOrders((currentOrders) =>
+        currentOrders.filter((currentOrder) => currentOrder.id !== order.id)
+      );
+      receivedOrderIdsRef.current.delete(order.id);
+      setOrdersMessage("Commande supprimée avec succès.");
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error("Admin delete order error:", error);
+      }
+      setOrdersError("Impossible de supprimer la commande.");
+    } finally {
+      setDeletingOrderId("");
+    }
+  }
+
   return (
     <div className="admin-orders-view">
       <div className="admin-order-tabs" role="tablist" aria-label="Statuts des commandes">
@@ -343,6 +392,7 @@ function AdminOrders() {
       </div>
 
       {ordersError ? <p className="admin-error">{ordersError}</p> : null}
+      {ordersMessage ? <p className="admin-success">{ordersMessage}</p> : null}
       {ordersStatus === "loading" ? <div className="empty-state"><p>Chargement des commandes...</p></div> : null}
       {ordersStatus === "error" ? <div className="empty-state"><h2>Erreur</h2><p>Les commandes ne sont pas disponibles.</p></div> : null}
       {ordersStatus === "success" && visibleOrders.length === 0 ? <div className="empty-state"><h2>Aucune commande</h2><p>Aucune commande avec ce statut pour le moment.</p></div> : null}
@@ -357,7 +407,43 @@ function AdminOrders() {
                   <h2>{order.product_name}</h2>
                   <p>{formatOrderDate(order.created_at)}</p>
                 </div>
-                <strong>{formatPrice(order.total_price)}</strong>
+                <div className="admin-order-heading-actions">
+                  <strong>{formatPrice(order.total_price)}</strong>
+                  {isCancelledStatus(order.status) ? (
+                    <button
+                      type="button"
+                      className="admin-order-delete"
+                      aria-label="Supprimer cette commande"
+                      title="Supprimer cette commande"
+                      aria-busy={deletingOrderId === order.id}
+                      disabled={Boolean(deletingOrderId || updatingOrderId)}
+                      onClick={() => handleDeleteOrder(order)}
+                    >
+                      {deletingOrderId === order.id ? (
+                        <span
+                          className="admin-order-delete-spinner"
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        <svg
+                          aria-hidden="true"
+                          viewBox="0 0 24 24"
+                          width="18"
+                          height="18"
+                        >
+                          <path
+                            d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                          />
+                        </svg>
+                      )}
+                    </button>
+                  ) : null}
+                </div>
               </div>
 
               <div className="admin-order-body">

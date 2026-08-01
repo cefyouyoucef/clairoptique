@@ -2542,6 +2542,12 @@ main {
   font-weight: 800;
 }
 
+.admin-success {
+  margin: 0;
+  color: #137333;
+  font-weight: 800;
+}
+
 @media (max-width: 1024px) {
   .container {
     width: min(100% - 28px, 1120px);
@@ -3920,10 +3926,67 @@ body.order-dialog-open {
   font-weight: 700;
 }
 
-.admin-order-heading > strong {
+.admin-order-heading-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.admin-order-heading-actions > strong {
   color: #e50914;
   font-size: 1.15rem;
   white-space: nowrap;
+}
+
+.admin-order-delete {
+  display: inline-grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  border: 1px solid #fecaca;
+  border-radius: 50%;
+  background: #fff1f2;
+  color: #dc2626;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.admin-order-delete:hover:not(:disabled) {
+  border-color: #dc2626;
+  background: #dc2626;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.admin-order-delete:focus-visible {
+  outline: 3px solid rgba(220, 38, 38, 0.24);
+  outline-offset: 2px;
+}
+
+.admin-order-delete:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.admin-order-delete-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: admin-order-delete-spin 700ms linear infinite;
+}
+
+@keyframes admin-order-delete-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .admin-order-status {
@@ -4060,6 +4123,10 @@ html[dir="rtl"] .order-form-grid textarea {
   .admin-order-heading {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .admin-order-heading-actions {
+    justify-content: space-between;
   }
 
   .admin-order-body {
