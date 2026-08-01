@@ -101,7 +101,14 @@ export default function Contact() {
           <div className="contact-panel">
             <div className="contact-item">
               <span>{t("contact.phone")}</span>
-              <strong dir="ltr">0553924630</strong>
+              <a
+                href="tel:0553924630"
+                className="contact-phone-link"
+                aria-label="Appeler Clair Optique au 0553924630"
+                dir="ltr"
+              >
+                0553924630
+              </a>
             </div>
 
             <div className="contact-item">
