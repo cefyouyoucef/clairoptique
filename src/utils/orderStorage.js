@@ -139,22 +139,51 @@ export async function getOrders() {
   return data || [];
 }
 
-export async function deleteOrder(id) {
+export async function deleteOrder(orderId) {
   requireSupabase();
+
+  if (!isUuid(orderId)) {
+    throw new Error("Invalid Supabase order UUID.");
+  }
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) {
+    throw userError;
+  }
+
+  if (!user) {
+    throw new Error("An authenticated admin session is required.");
+  }
 
   const { data, error } = await supabase
     .from("orders")
     .delete()
-    .eq("id", id)
-    .select("id")
-    .maybeSingle();
+    .eq("id", orderId)
+    .select("id");
 
-  if (error) throw error;
-  if (!data?.id) {
-    throw new Error("Order was not deleted.");
+  if (import.meta.env.DEV) {
+    console.log("Supabase order delete response:", {
+      orderId,
+      data,
+      error,
+    });
   }
 
-  return id;
+  if (error) {
+    throw error;
+  }
+
+  if (!Array.isArray(data) || data.length === 0) {
+    throw new Error(
+      "No order was deleted. Check the order id and Supabase RLS delete policy."
+    );
+  }
+
+  return data[0];
 }
 
 export async function updateOrderStatus(id, status) {

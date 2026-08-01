@@ -331,17 +331,28 @@ function AdminOrders() {
     setOrdersMessage("");
 
     try {
-      await deleteOrder(order.id);
+      const deletedOrder = await deleteOrder(order.id);
+
+      if (import.meta.env.DEV) {
+        console.log("Admin order deletion confirmed:", deletedOrder);
+      }
+
       setOrders((currentOrders) =>
-        currentOrders.filter((currentOrder) => currentOrder.id !== order.id)
+        currentOrders.filter(
+          (currentOrder) => currentOrder.id !== order.id
+        )
       );
+
       receivedOrderIdsRef.current.delete(order.id);
       setOrdersMessage("Commande supprimée avec succès.");
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error("Admin delete order error:", error);
       }
-      setOrdersError("Impossible de supprimer la commande.");
+
+      setOrdersError(
+        error?.message || "Impossible de supprimer la commande."
+      );
     } finally {
       setDeletingOrderId("");
     }
