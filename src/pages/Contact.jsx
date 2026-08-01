@@ -105,6 +105,53 @@ export default function Contact() {
             </div>
 
             <div className="contact-item">
+              <a
+                className="contact-fix-row"
+                href="tel:025744373"
+                aria-label="Appeler le fixe du magasin au 025744373"
+              >
+                <span className="contact-fix-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path
+                      d="M5 9V7.75C5 6.78 5.78 6 6.75 6h10.5C18.22 6 19 6.78 19 7.75V9"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <rect
+                      x="4"
+                      y="9"
+                      width="16"
+                      height="11"
+                      rx="2.5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                    />
+                    <path
+                      d="M8 13h8M8 16h1m3 0h1m3 0h1"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </span>
+
+                <span className="contact-fix-content">
+                  <span className="contact-fix-label">Fix du magasin</span>
+                  <strong className="contact-fix-number" dir="ltr">
+                    025744373
+                  </strong>
+                </span>
+
+                <span className="contact-fix-action">Appeler le fixe</span>
+              </a>
+            </div>
+
+            <div className="contact-item">
               <span>{t("contact.whatsapp")}</span>
               <a
                 className="btn btn-primary"
