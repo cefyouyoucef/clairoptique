@@ -2956,17 +2956,32 @@ main {
     display: none;
   }
 
-  .hero,
+  .hero {
+    padding: 20px 0 28px;
+    overflow-x: clip;
+  }
+
   .section {
     padding: 36px 0;
   }
 
   .hero + .section {
-    margin-top: 36px;
+    margin-top: 24px;
+  }
+
+  .hero-grid {
+    width: 100%;
+    padding-inline: 20px;
+    box-sizing: border-box;
+    gap: 16px;
   }
 
   .hero-copy {
     text-align: center;
+  }
+
+  .hero-copy .eyebrow {
+    margin-bottom: 8px;
   }
 
   .hero-copy .hero-actions {
@@ -2974,35 +2989,44 @@ main {
   }
 
   .hero-actions-mobile {
-    width: 100%;
+    width: calc(100% + 40px);
+    margin-inline: -20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
     justify-content: center;
-  }
-
-  .hero-copy h1,
-  .page-heading h1,
-  .details-content h1 {
-    font-size: 2.25rem;
-    line-height: 1.02;
+    gap: 14px;
   }
 
   .hero-copy h1 {
-    font-size: 34px;
-    line-height: 1.1;
+    font-size: clamp(34px, 9.2vw, 36px);
+    line-height: 1.08;
+    font-weight: 800;
   }
 
+  .page-heading h1,
   .details-content h1 {
     font-size: 34px;
     line-height: 1.08;
   }
 
-  .hero-subtitle,
+  .hero-subtitle {
+    max-width: 560px;
+    margin: 14px auto 0;
+    font-size: clamp(16px, 2.2vw, 17px);
+    line-height: 1.55;
+    text-align: center;
+  }
+
   .page-heading p,
   .details-description {
     font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  .hero-button,
+  .details-actions .btn {
+    width: 100%;
   }
 
   .page-heading .filter-intro {
@@ -3012,21 +3036,11 @@ main {
     line-height: 1.55;
   }
 
-  .hero-subtitle {
-    margin-bottom: 0;
-  }
-
-  .hero-button,
-  .details-actions .btn {
-    width: 100%;
-  }
-
   .hero-actions-mobile .hero-button {
-    width: 100%;
+    width: calc(100% - 40px);
     max-width: 360px;
     min-height: 56px;
-    margin-left: auto;
-    margin-right: auto;
+    margin-inline: auto;
   }
 
   .hero-whatsapp-button {
@@ -3034,17 +3048,21 @@ main {
   }
 
   .hero-visual {
-    height: 280px;
-    padding: 14px;
-    border-radius: 18px;
+    height: clamp(300px, 80vw, 320px);
+    padding: 16px;
+    border-radius: 20px;
+    align-items: center;
+    justify-content: center;
   }
 
   .hero-product-image {
     width: 100%;
-    height: auto;
+    height: 100%;
     max-width: 100%;
-    max-height: 252px;
-    transform: scale(1);
+    max-height: 230px;
+    object-fit: contain;
+    object-position: center;
+    transform: none;
   }
 
   .details-page {
@@ -3227,7 +3245,6 @@ main {
     text-align: center;
   }
 
-  .hero,
   .section {
     padding: 36px 0;
     text-align: center;
