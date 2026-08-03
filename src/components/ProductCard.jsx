@@ -35,10 +35,16 @@ function getProductPlaceholder(productName) {
 }
 
 function handleProductImageError(event, productName) {
-  const imagePath = event.currentTarget.dataset.imagePath || event.currentTarget.currentSrc || event.currentTarget.src;
+  const failedImagePath =
+    event.currentTarget.dataset.imagePath ||
+    event.currentTarget.currentSrc ||
+    event.currentTarget.src;
 
   if (!event.currentTarget.src.startsWith("data:image/svg+xml")) {
-    console.log("Image failed:", imagePath);
+    if (import.meta.env.DEV) {
+      console.warn("Product image failed to load:", failedImagePath);
+    }
+
     event.currentTarget.src = getProductPlaceholder(productName);
   }
 }
@@ -83,129 +89,19 @@ function getProductImageLabel(product, language = "fr") {
   return getLocalizedProductName(product, language);
 }
 
-function loadCollageImage(imagePath) {
-  return new Promise((resolve) => {
-    const image = new Image();
+function getProductCardImagePath(product) {
+  const imagePaths = [
+    Array.isArray(product?.images) ? product.images[0] : "",
+    product?.image,
+    product?.imageUrl,
+    product?.image_url,
+  ];
 
-    if (/^https?:\/\//i.test(imagePath)) {
-      image.crossOrigin = "anonymous";
-    }
-
-    image.onload = () => resolve(image);
-    image.onerror = () => resolve(null);
-    image.src = imagePath;
-  });
-}
-
-function drawContainedImage(context, image, x, y, width, height) {
-  const padding = 24;
-  const availableWidth = width - padding * 2;
-  const availableHeight = height - padding * 2;
-  const scale = Math.min(
-    availableWidth / image.naturalWidth,
-    availableHeight / image.naturalHeight
+  return (
+    imagePaths
+      .map((imagePath) => String(imagePath || "").trim())
+      .find(Boolean) || ""
   );
-  const renderedWidth = image.naturalWidth * scale;
-  const renderedHeight = image.naturalHeight * scale;
-
-  context.drawImage(
-    image,
-    x + (width - renderedWidth) / 2,
-    y + (height - renderedHeight) / 2,
-    renderedWidth,
-    renderedHeight
-  );
-}
-
-async function createProductCollage(collageImages) {
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d");
-
-  if (!context) return null;
-
-  canvas.width = 1200;
-  canvas.height = 900;
-  context.fillStyle = "#ffffff";
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  const loadedImages = await Promise.all(
-    collageImages.map((imagePath) => loadCollageImage(imagePath))
-  );
-  const cellWidth = canvas.width / 2;
-  const cellHeight = canvas.height / 2;
-
-  loadedImages.forEach((image, index) => {
-    if (!image) return;
-
-    const column = index % 2;
-    const row = Math.floor(index / 2);
-    drawContainedImage(
-      context,
-      image,
-      column * cellWidth,
-      row * cellHeight,
-      cellWidth,
-      cellHeight
-    );
-  });
-
-  context.strokeStyle = "#e5e7eb";
-  context.lineWidth = 2;
-  context.beginPath();
-  context.moveTo(cellWidth, 0);
-  context.lineTo(cellWidth, canvas.height);
-  context.moveTo(0, cellHeight);
-  context.lineTo(canvas.width, cellHeight);
-  context.stroke();
-
-  return new Promise((resolve) => {
-    try {
-      canvas.toBlob(resolve, "image/jpeg", 0.92);
-    } catch (error) {
-      console.error("Product collage generation failed:", error);
-      resolve(null);
-    }
-  });
-}
-
-function useProductCollage(collageImages) {
-  const [collageUrl, setCollageUrl] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    let objectUrl = "";
-
-    setCollageUrl("");
-
-    if (collageImages.length > 0) {
-      createProductCollage(collageImages)
-        .then((blob) => {
-          if (!blob) return;
-
-          objectUrl = URL.createObjectURL(blob);
-
-          if (cancelled) {
-            URL.revokeObjectURL(objectUrl);
-            return;
-          }
-
-          setCollageUrl(objectUrl);
-        })
-        .catch((error) => {
-          console.error("Product collage generation failed:", error);
-        });
-    }
-
-    return () => {
-      cancelled = true;
-
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
-    };
-  }, [collageImages]);
-
-  return collageUrl;
 }
 
 function getProductCategoryLabel(category, language = "fr") {
@@ -248,12 +144,9 @@ function ProductCard({ product }) {
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const detailsPath = `/products/${product.id}`;
   const displayedName = getLocalizedProductName(product, language);
-  const imageLabel = getProductImageLabel(product, language);
-  const collageImages = useMemo(
-    () => getProductImages(product).slice(0, 4),
-    [product]
-  );
-  const collageUrl = useProductCollage(collageImages);
+  const productImage = getProductCardImagePath(product);
+  const productImageSrc =
+    productImage || getProductPlaceholder(displayedName);
   const { oldPrice, hasDiscount, discountPercent } = getDiscountInfo(product);
 
   function openDetails() {
@@ -286,9 +179,14 @@ function ProductCard({ product }) {
             className="product-logo-badge"
           />
           <img
-            src={collageUrl || getProductPlaceholder(imageLabel)}
-            alt={imageLabel}
-            className="product-collage-preview"
+            src={productImageSrc}
+            alt={displayedName}
+            className="product-image"
+            data-image-path={productImage}
+            loading="lazy"
+            onError={(event) =>
+              handleProductImageError(event, displayedName)
+            }
           />
         </div>
 
