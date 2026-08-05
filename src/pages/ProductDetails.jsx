@@ -13,6 +13,7 @@ import {
   getProductImagePath,
 } from "../utils/productPresentation.js";
 import OrderModal from "../components/OrderModal.jsx";
+import ProductImageLightbox from "../components/ProductImageLightbox.jsx";
 import { useLanguage } from "../context/LanguageContext.jsx";
 import useProductWhatsAppShare from "../hooks/useProductWhatsAppShare.js";
 import {
@@ -44,6 +45,7 @@ function ProductDetails() {
   const [productStatus, setProductStatus] = useState("loading");
   const [productError, setProductError] = useState("");
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [isOrderOpen, setIsOrderOpen] = useState(false);
   const { handleProductWhatsAppShare, isPreparingShare } =
     useProductWhatsAppShare(product, language, "order.whatsappMessage");
@@ -164,6 +166,7 @@ function ProductDetails() {
                 alt={productImageLabel}
                 className="product-detail-image"
                 data-image-path={activeImage}
+                onClick={() => setIsLightboxOpen(true)}
                 onError={(event) =>
                   handleProductImageError(event, productImageLabel)
                 }
@@ -299,6 +302,17 @@ function ProductDetails() {
         isOpen={isOrderOpen}
         product={product}
         onClose={() => setIsOrderOpen(false)}
+      />
+      <ProductImageLightbox
+        images={productImages}
+        activeIndex={activeImageIndex}
+        onActiveIndexChange={setActiveImageIndex}
+        isOpen={isLightboxOpen}
+        onClose={() => setIsLightboxOpen(false)}
+        imageAlt={productImageLabel}
+        onImageError={(event) =>
+          handleProductImageError(event, productImageLabel)
+        }
       />
     </section>
   );
