@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import OrderModal from "./OrderModal.jsx";
 import { useLanguage } from "../context/LanguageContext.jsx";
 import {
@@ -7,6 +7,7 @@ import {
   translate,
 } from "../i18n/translations.js";
 import { formatPrice, getProductImages } from "../utils/productPresentation.js";
+import { saveProductReturnState } from "../utils/productNavigation.js";
 
 function getProductPlaceholder(productName) {
   const safeProductName = String(productName || "Produit").replace(
@@ -140,6 +141,7 @@ function getProductMeta(product, language = "fr") {
 
 function ProductCard({ product }) {
   const { language, t } = useLanguage();
+  const location = useLocation();
   const navigate = useNavigate();
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const detailsPath = `/products/${product.id}`;
@@ -150,7 +152,12 @@ function ProductCard({ product }) {
   const { oldPrice, hasDiscount, discountPercent } = getDiscountInfo(product);
 
   function openDetails() {
-    navigate(detailsPath);
+    navigate(detailsPath, {
+      state: saveProductReturnState({
+        location,
+        productPath: detailsPath,
+      }),
+    });
   }
 
   function handleCardKeyDown(event) {
@@ -224,7 +231,22 @@ function ProductCard({ product }) {
             <Link
               className="btn btn-secondary"
               to={detailsPath}
-              onClick={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+
+                if (
+                  event.button !== 0 ||
+                  event.metaKey ||
+                  event.ctrlKey ||
+                  event.shiftKey ||
+                  event.altKey
+                ) {
+                  return;
+                }
+
+                event.preventDefault();
+                openDetails();
+              }}
             >
               {t("product.viewDetails")}
             </Link>

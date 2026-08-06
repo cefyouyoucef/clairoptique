@@ -19,6 +19,10 @@ import {
   normalizeSearchText,
   productMatchesSearch,
 } from "../utils/productSearch.js";
+import {
+  PRODUCT_RETURN_EVENT,
+  saveProductReturnState,
+} from "../utils/productNavigation.js";
 
 function getSearchGenderLabel(gender, language) {
   const genderKeys = {
@@ -96,6 +100,23 @@ function Navbar() {
   }, [location.pathname]);
 
   useEffect(() => {
+    function restoreProductSearch(event) {
+      const restoredSearchQuery = String(event.detail?.searchQuery || "");
+
+      if (!restoredSearchQuery) return;
+
+      setSearchQuery(restoredSearchQuery);
+      setIsSearchOpen(true);
+    }
+
+    window.addEventListener(PRODUCT_RETURN_EVENT, restoreProductSearch);
+
+    return () => {
+      window.removeEventListener(PRODUCT_RETURN_EVENT, restoreProductSearch);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!isSearchOpen) return undefined;
 
     function handlePointerDown(event) {
@@ -142,8 +163,15 @@ function Navbar() {
   }
 
   function handleSearchResultClick(product) {
+    const productPath = `/products/${product.id}`;
+    const navigationState = saveProductReturnState({
+      location,
+      productPath,
+      searchQuery,
+    });
+
     closeSearch();
-    navigate(`/products/${product.id}`);
+    navigate(productPath, { state: navigationState });
   }
 
   return (

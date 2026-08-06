@@ -1,5 +1,10 @@
 ﻿import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import {
   formatFrameSize,
   getDiscountInfo,
@@ -21,6 +26,7 @@ import {
   getLocalizedProductName,
 } from "../i18n/translations.js";
 import { getProductById } from "../utils/productStorage.js";
+import { getLocationPath } from "../utils/productNavigation.js";
 
 function getProductGalleryImages(product) {
   if (!product) return [];
@@ -41,6 +47,10 @@ function getProductGalleryImages(product) {
 function ProductDetails() {
   const { language, t } = useLanguage();
   const { id } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const returnLocation = location.state?.from;
+  const returnPath = getLocationPath(returnLocation) || "/products";
   const [product, setProduct] = useState(null);
   const [productStatus, setProductStatus] = useState("loading");
   const [productError, setProductError] = useState("");
@@ -49,6 +59,30 @@ function ProductDetails() {
   const [isOrderOpen, setIsOrderOpen] = useState(false);
   const { handleProductWhatsAppShare, isPreparingShare } =
     useProductWhatsAppShare(product, language, "order.whatsappMessage");
+
+  function handleBackNavigation(event) {
+    event.preventDefault();
+
+    const historyIndex = Number(window.history.state?.idx);
+
+    if (returnLocation && Number.isFinite(historyIndex) && historyIndex > 0) {
+      navigate(-1);
+      return;
+    }
+
+    if (returnLocation) {
+      navigate(returnPath, {
+        replace: true,
+        state: {
+          restoreProductScroll: true,
+          scrollY: Number(location.state?.scrollY) || 0,
+        },
+      });
+      return;
+    }
+
+    navigate("/products", { replace: true });
+  }
 
   useEffect(() => {
     let isActive = true;
@@ -96,7 +130,11 @@ function ProductDetails() {
         <div className="container empty-state">
           <h1>{t("common.error")}</h1>
           <p>{t(productError)}</p>
-          <Link className="btn btn-primary" to="/products">
+          <Link
+            className="btn btn-primary"
+            to={returnPath}
+            onClick={handleBackNavigation}
+          >
             {t("product.backToCollections")}
           </Link>
         </div>
@@ -110,7 +148,11 @@ function ProductDetails() {
         <div className="container empty-state">
           <h1>{t("product.notFound")}</h1>
           <p>{t("product.notAvailable")}</p>
-          <Link className="btn btn-primary" to="/products">
+          <Link
+            className="btn btn-primary"
+            to={returnPath}
+            onClick={handleBackNavigation}
+          >
             {t("product.backToCollections")}
           </Link>
         </div>
@@ -146,8 +188,9 @@ function ProductDetails() {
         <div className="details-nav" aria-label={t("product.navigation")}>
           <Link
             className="details-back-button"
-            to="/products"
+            to={returnPath}
             aria-label={t("product.back")}
+            onClick={handleBackNavigation}
           >
             {t("common.backArrow")}
           </Link>

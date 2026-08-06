@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard.jsx";
 import { useLanguage } from "../context/LanguageContext.jsx";
 import { useProducts } from "../context/ProductsContext.jsx";
@@ -27,11 +28,29 @@ function normalizeValue(value) {
   return String(value || "").trim().toLowerCase();
 }
 
+function getFilterFromSearchParams(searchParams) {
+  const requestedFilter = normalizeValue(searchParams.get("category"));
+
+  return (
+    filters.find((filter) => normalizeValue(filter) === requestedFilter) ||
+    "Tous"
+  );
+}
+
+function getPageFromSearchParams(searchParams) {
+  const requestedPage = Number.parseInt(searchParams.get("page"), 10);
+
+  return Number.isInteger(requestedPage) && requestedPage > 0
+    ? requestedPage
+    : 1;
+}
+
 function Products() {
   const { t } = useLanguage();
   const { products, productsError, productsStatus } = useProducts();
-  const [activeFilter, setActiveFilter] = useState("Tous");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeFilter = getFilterFromSearchParams(searchParams);
+  const currentPage = getPageFromSearchParams(searchParams);
   const productsSectionRef = useRef(null);
 
   const filteredProducts = useMemo(() => {
@@ -59,18 +78,39 @@ function Products() {
   );
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [activeFilter]);
+    if (
+      productsStatus === "success" &&
+      currentPage > safeTotalPages
+    ) {
+      const nextSearchParams = new URLSearchParams(searchParams);
 
-  useEffect(() => {
-    if (currentPage > safeTotalPages) {
-      setCurrentPage(safeTotalPages);
+      if (safeTotalPages === 1) {
+        nextSearchParams.delete("page");
+      } else {
+        nextSearchParams.set("page", String(safeTotalPages));
+      }
+
+      setSearchParams(nextSearchParams, { replace: true });
     }
-  }, [currentPage, safeTotalPages]);
+  }, [
+    currentPage,
+    productsStatus,
+    safeTotalPages,
+    searchParams,
+    setSearchParams,
+  ]);
 
   function handleFilterChange(filter) {
-    setActiveFilter(filter);
-    setCurrentPage(1);
+    const nextSearchParams = new URLSearchParams(searchParams);
+
+    if (filter === "Tous") {
+      nextSearchParams.delete("category");
+    } else {
+      nextSearchParams.set("category", normalizeValue(filter));
+    }
+
+    nextSearchParams.delete("page");
+    setSearchParams(nextSearchParams);
   }
 
   function scrollToProducts() {
@@ -91,7 +131,15 @@ function Products() {
       return;
     }
 
-    setCurrentPage(nextPage);
+    const nextSearchParams = new URLSearchParams(searchParams);
+
+    if (nextPage === 1) {
+      nextSearchParams.delete("page");
+    } else {
+      nextSearchParams.set("page", String(nextPage));
+    }
+
+    setSearchParams(nextSearchParams);
     scrollToProducts();
   }
 
