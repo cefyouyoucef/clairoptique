@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import {
+  Link,
+  NavLink,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import {
   getProductCategoryLabel,
   getProductPlaceholder,
@@ -177,10 +182,10 @@ function Navbar() {
   return (
     <>
       <header className="site-header">
-        <div className="brand">
+        <Link to="/" className="brand" aria-label="Retour à l’accueil">
           <img className="brand-logo" src="/images/logo.png" alt="Clair'Optique" />
           <span>Clair'Optique</span>
-        </div>
+        </Link>
 
         <div className="header-actions">
           {!isAdminRoute ? (
