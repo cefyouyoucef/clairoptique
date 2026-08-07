@@ -68,8 +68,17 @@ function Products() {
     });
   }, [activeFilter, products]);
 
-  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+  const totalPages = Math.ceil(
+    filteredProducts.length / PRODUCTS_PER_PAGE
+  );
   const safeTotalPages = Math.max(totalPages, 1);
+  const visiblePages =
+    currentPage <= 3
+      ? Array.from(
+          { length: Math.min(3, totalPages) },
+          (_, index) => index + 1
+        )
+      : [currentPage];
   const pageStartIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
 
   const paginatedProducts = filteredProducts.slice(
@@ -197,39 +206,39 @@ function Products() {
                   <button
                     className="pagination-button pagination-nav"
                     type="button"
+                    aria-label="Page précédente"
                     disabled={currentPage === 1}
                     onClick={() => handlePageChange(currentPage - 1)}
                   >
-                    {t("collections.previous")}
+                    ‹
                   </button>
 
-                  {Array.from({ length: totalPages }, (_, index) => {
-                    const pageNumber = index + 1;
-
-                    return (
-                      <button
-                        className={
-                          pageNumber === currentPage
-                            ? "pagination-button active"
-                            : "pagination-button"
-                        }
-                        key={pageNumber}
-                        type="button"
-                        aria-current={pageNumber === currentPage ? "page" : undefined}
-                        onClick={() => handlePageChange(pageNumber)}
-                      >
-                        {pageNumber}
-                      </button>
-                    );
-                  })}
+                  {visiblePages.map((pageNumber) => (
+                    <button
+                      className={
+                        pageNumber === currentPage
+                          ? "pagination-button active"
+                          : "pagination-button"
+                      }
+                      key={pageNumber}
+                      type="button"
+                      aria-current={
+                        pageNumber === currentPage ? "page" : undefined
+                      }
+                      onClick={() => handlePageChange(pageNumber)}
+                    >
+                      {pageNumber}
+                    </button>
+                  ))}
 
                   <button
                     className="pagination-button pagination-nav"
                     type="button"
-                    disabled={currentPage === totalPages}
+                    aria-label="Page suivante"
+                    disabled={currentPage === safeTotalPages}
                     onClick={() => handlePageChange(currentPage + 1)}
                   >
-                    {t("collections.next")}
+                    ›
                   </button>
                 </nav>
               ) : null}
