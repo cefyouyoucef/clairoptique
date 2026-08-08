@@ -908,6 +908,7 @@ main {
   appearance: none;
   display: inline-grid;
   place-items: center;
+  box-sizing: border-box;
   flex: 0 0 48px;
   width: 48px;
   min-width: 48px;
@@ -934,15 +935,15 @@ main {
   border-color: #e50914;
   color: #ffffff;
   box-shadow: 0 10px 22px rgba(229, 9, 20, 0.18);
-  transform: translateY(-1px);
+  transform: none;
 }
 
 .pagination-button.active {
   background: #e50914;
   border-color: #e50914;
   color: #ffffff;
-  box-shadow: 0 10px 22px rgba(229, 9, 20, 0.18);
-  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(229, 9, 20, 0.18);
+  transform: none;
 }
 
 .pagination-button:disabled {
