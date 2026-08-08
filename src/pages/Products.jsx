@@ -52,7 +52,6 @@ function Products() {
   const activeFilter = getFilterFromSearchParams(searchParams);
   const currentPage = getPageFromSearchParams(searchParams);
   const productsSectionRef = useRef(null);
-  const paginationRef = useRef(null);
 
   const filteredProducts = useMemo(() => {
     const selectedFilter = normalizeValue(activeFilter);
@@ -123,12 +122,12 @@ function Products() {
     setSearchParams(nextSearchParams);
   }
 
-  function scrollToPagination() {
+  function scrollToProductsTop() {
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
-        paginationRef.current?.scrollIntoView({
+        productsSectionRef.current?.scrollIntoView({
           behavior: "auto",
-          block: "end",
+          block: "start",
         });
       });
     });
@@ -152,7 +151,7 @@ function Products() {
     }
 
     setSearchParams(nextSearchParams);
-    scrollToPagination();
+    scrollToProductsTop();
   }
 
   return (
@@ -203,7 +202,6 @@ function Products() {
 
               {productsStatus === "success" && totalPages > 1 ? (
                 <nav
-                  ref={paginationRef}
                   className="products-pagination"
                   aria-label={t("collections.paginationLabel")}
                 >
