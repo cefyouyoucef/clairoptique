@@ -125,9 +125,21 @@ function Products() {
   function scrollToProductsTop() {
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
-        productsSectionRef.current?.scrollIntoView({
+        const element = productsSectionRef.current;
+
+        if (!element) return;
+
+        const headerOffset = 90;
+
+        const targetTop =
+          element.getBoundingClientRect().top +
+          window.scrollY -
+          headerOffset;
+
+        window.scrollTo({
+          top: Math.max(0, targetTop),
+          left: 0,
           behavior: "auto",
-          block: "start",
         });
       });
     });
@@ -178,7 +190,7 @@ function Products() {
           ))}
         </div>
 
-        <div className="products-results" ref={productsSectionRef}>
+        <div className="products-results">
           {productsStatus === "loading" ? (
             <div className="empty-state">
               <p>{t("collections.loading")}</p>
@@ -194,7 +206,7 @@ function Products() {
 
           {productsStatus === "success" && filteredProducts.length > 0 ? (
             <>
-              <div className="products-grid">
+              <div className="products-grid" ref={productsSectionRef}>
                 {paginatedProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
