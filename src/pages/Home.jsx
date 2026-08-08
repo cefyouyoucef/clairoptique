@@ -4,19 +4,17 @@ import ProductCard from "../components/ProductCard.jsx";
 import { WHATSAPP_NUMBER } from "../config/contact.js";
 import { useLanguage } from "../context/LanguageContext.jsx";
 import { useProducts } from "../context/ProductsContext.jsx";
+import { prioritizePromotedProducts } from "../utils/productPromotion.js";
 
 const advantageKeys = ["choice", "quality", "speed"];
 
 function Home() {
   const { t } = useLanguage();
   const { products, productsError, productsStatus } = useProducts();
-  const featuredProducts = useMemo(() => {
-    const popularProducts = products.filter((product) => product.featured === true);
-
-    return popularProducts.length > 0
-      ? popularProducts.slice(0, 3)
-      : products.slice(0, 3);
-  }, [products]);
+  const featuredProducts = useMemo(
+    () => prioritizePromotedProducts(products).slice(0, 3),
+    [products]
+  );
 
   const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
     t("home.whatsappMessage")

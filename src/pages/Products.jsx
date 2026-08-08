@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard.jsx";
 import { useLanguage } from "../context/LanguageContext.jsx";
 import { useProducts } from "../context/ProductsContext.jsx";
+import { prioritizePromotedProducts } from "../utils/productPromotion.js";
 
 const filters = [
   "Tous",
@@ -55,17 +56,20 @@ function Products() {
 
   const filteredProducts = useMemo(() => {
     const selectedFilter = normalizeValue(activeFilter);
+    const matchingProducts =
+      selectedFilter === "tous"
+        ? products
+        : products.filter((product) => {
+            const productCategory = normalizeValue(product.category);
+            const productGender = normalizeValue(product.gender);
 
-    if (selectedFilter === "tous") {
-      return products;
-    }
+            return (
+              productCategory === selectedFilter ||
+              productGender === selectedFilter
+            );
+          });
 
-    return products.filter((product) => {
-      const productCategory = normalizeValue(product.category);
-      const productGender = normalizeValue(product.gender);
-
-      return productCategory === selectedFilter || productGender === selectedFilter;
-    });
+    return prioritizePromotedProducts(matchingProducts);
   }, [activeFilter, products]);
 
   const totalPages = Math.ceil(

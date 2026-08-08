@@ -4,6 +4,7 @@ import AdminOrders from "./AdminOrders.jsx";
 import ProductForm from "./ProductForm.jsx";
 import { getDiscountInfo } from "../components/ProductCard.jsx";
 import { formatPrice } from "../utils/productPresentation.js";
+import { isPromotedProduct } from "../utils/productPromotion.js";
 import { isSupabaseConfigured, supabase } from "../lib/supabaseClient.js";
 import {
   addProduct,
@@ -247,7 +248,7 @@ function AdminDashboard() {
                               <strong>{formatPrice(product.price)}</strong>
                             )}
                             <p>{product.stock ? "En stock" : "Rupture de stock"}</p>
-                            {product.featured ? (
+                            {isPromotedProduct(product) ? (
                               <span className="admin-featured-badge">Populaire</span>
                             ) : null}
                           </div>
